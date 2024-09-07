@@ -5,8 +5,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 
 // Function to generate personalized financial advice
-const getFinancialAdvice = async (totalBudget, availableBalance, totalSpend) => {
-  console.log(totalBudget, availableBalance, totalSpend);
+const getFinancialAdvice = async (totalBudget, availableBalance, totalSpend, totalIncome,) => {
+  console.log(totalBudget, totalIncome, availableBalance, totalSpend);
 
   try {
     // Use 'gemini-pro' which is available in the free tier
@@ -16,7 +16,8 @@ const getFinancialAdvice = async (totalBudget, availableBalance, totalSpend) => 
       Based on the following financial data:
       - Total Budget: ${totalBudget} NPR 
       - Expenses: ${totalSpend} NPR 
-      - Incomes: ${availableBalance} NPR
+      - Incomes: ${totalIncome} NPR
+      - Available Balance: ${availableBalance} NPR
       Provide detailed financial advice in 2 sentences to help the user manage their finances more effectively.
     `;
 

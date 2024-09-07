@@ -20,65 +20,39 @@ function CardInfo({ budgetList, incomeList, investmentList }) {
   const [financialAdvice, setFinancialAdvice] = useState("");
 
   useEffect(() => {
-    if (budgetList.length > 0 || incomeList.length > 0) {
-      CalculateCardInfo();
-    }
-  }, [budgetList, incomeList]);
+    CalculateCardInfo();
+  }, [budgetList, incomeList, investmentList]);
 
   useEffect(() => {
-    if (totalBudget > 0 || availableBalance > 0 || totalSpend > 0) {
+    if (totalBudget > 0 || availableBalance > 0 || totalSpend > 0 ||  totalIncome > 0) {
       const fetchFinancialAdvice = async () => {
         const advice = await getFinancialAdvice(
           totalBudget,
           availableBalance,
-          totalSpend
+          totalSpend,
+          totalIncome
         );
         setFinancialAdvice(advice);
       };
 
       fetchFinancialAdvice();
     }
-  }, [totalBudget, availableBalance, totalSpend]);
+  }, [totalBudget, availableBalance, totalSpend, totalIncome]);
 
-  useEffect(() => {
-    // Ensure investment values are treated as numbers
-    const totalInvestmentValue = investmentList.reduce(
+  const CalculateCardInfo = () => {
+    const totalBudget_ = budgetList.reduce((acc, budget) => acc + Number(budget.amount), 0);
+    const totalSpend_ = budgetList.reduce((acc, budget) => acc + (budget.totalSpend || 0), 0);
+    const totalIncome_ = incomeList.length > 0 ? incomeList[0].totalAmount : 0;
+    const totalInvestment_ = investmentList.reduce(
       (acc, investment) => acc + (parseFloat(investment.totalvalue) || 0),
       0
     );
-    setTotalInvestment(totalInvestmentValue);
-  }, [investmentList]);
 
-  useEffect(() => {
-    // Calculate available balance
-    const balance =
-      totalIncome -  totalInvestment - totalBudget;
-    setAvailableBalance(balance);
-  }, [totalIncome, totalInvestment, totalBudget]);
-
-
-  const CalculateCardInfo = () => {
-    console.log(budgetList);
-    let totalBudget_ = 0;
-    let totalSpend_ = 0;
-    let totalIncome_ = 0;
-    let totalInvestment_ = 0;
-
-    budgetList.forEach((element) => {
-      totalBudget_ = totalBudget_ + Number(element.amount);
-      totalSpend_ = totalSpend_ + element.totalSpend;
-    });
-
-    incomeList.forEach((element) => {
-      totalIncome_ = totalIncome_ + element.totalAmount;
-    });
-
-
-
-    setTotalIncome(totalIncome_);
     setTotalBudget(totalBudget_);
     setTotalSpend(totalSpend_);
-
+    setTotalIncome(totalIncome_);
+    setTotalInvestment(totalInvestment_);
+    setAvailableBalance(totalIncome_ - totalInvestment_ - totalBudget_);
   };
 
   return (
@@ -148,7 +122,6 @@ function CardInfo({ budgetList, incomeList, investmentList }) {
               </div>
               <CircleDollarSign className="bg-blue-800 p-3 h-12 w-12 rounded-full text-white" />
             </div>
-
             <div className="p-7 border rounded-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-sm">Investment</h2>

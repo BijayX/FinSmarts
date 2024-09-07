@@ -15,9 +15,11 @@ function Dashboard() {
   const [budgetList, setBudgetList] = useState([]);
   const [incomeList, setIncomeList] = useState([]);
   const [expensesList, setExpensesList] = useState([]);
-  const [investmentList, setinvestmentList] = useState([]);
+  const [investmentList, setInvestmentList] = useState([]);
 
   const getBudgetList = useCallback(async () => {
+    if (!user?.primaryEmailAddress?.emailAddress) return;
+    
     const result = await db
       .select({
         ...getTableColumns(Budgets),
@@ -26,52 +28,31 @@ function Dashboard() {
       })
       .from(Budgets)
       .leftJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
-      .where(eq(Budgets.createdBy, user?.primaryEmailAddress?.emailAddress))
+      .where(eq(Budgets.createdBy, user.primaryEmailAddress.emailAddress))
       .groupBy(Budgets.id)
       .orderBy(desc(Budgets.id));
     setBudgetList(result);
-    getAllExpenses();
-    getIncomeList();
-    getAllInvestment();
   }, [user?.primaryEmailAddress?.emailAddress]);
 
-  useEffect(() => {
-    if (user) {
-      getBudgetList();
-    }
-  }, [user, getBudgetList]);
+  const getIncomeList = useCallback(async () => {
+    if (!user?.primaryEmailAddress?.emailAddress) return;
 
-  // const getIncomeList = async () => {
-  //   try {
-  //     const result = await db
-  //       .select({
-  //         ...getTableColumns(Incomes),
-  //         totalAmount: sql`SUM(CAST(${Incomes.amount} AS NUMERIC))`.mapWith(Number),
-  //       })
-  //       .from(Incomes);
-  //     // Remove the groupBy clause if you want to sum all incomes
-  //     setIncomeList(result);
-  //   } catch (error) {
-  //     console.error("Error fetching income list:", error);
-  //   }
-  // };
-
-  const getIncomeList = async () => {
     try {
       const result = await db
         .select({
-          totalAmount: sql`SUM(CAST(${Incomes.amount} AS NUMERIC))`.mapWith(
-            Number
-          ),
+          totalAmount: sql`SUM(CAST(${Incomes.amount} AS NUMERIC))`.mapWith(Number),
         })
-        .from(Incomes);
+        .from(Incomes)
+        .where(eq(Incomes.createdBy, user.primaryEmailAddress.emailAddress));
       setIncomeList(result);
     } catch (error) {
       console.error("Error fetching income list:", error);
     }
-  };
+  }, [user?.primaryEmailAddress?.emailAddress]);
 
-  const getAllExpenses = async () => {
+  const getAllExpenses = useCallback(async () => {
+    if (!user?.primaryEmailAddress?.emailAddress) return;
+
     const result = await db
       .select({
         id: Expenses.id,
@@ -81,12 +62,14 @@ function Dashboard() {
       })
       .from(Budgets)
       .rightJoin(Expenses, eq(Budgets.id, Expenses.budgetId))
-      .where(eq(Budgets.createdBy, user?.primaryEmailAddress.emailAddress))
+      .where(eq(Budgets.createdBy, user.primaryEmailAddress.emailAddress))
       .orderBy(desc(Expenses.id));
     setExpensesList(result);
-  };
+  }, [user?.primaryEmailAddress?.emailAddress]);
 
-  const getAllInvestment = async () => {
+  const getAllInvestment = useCallback(async () => {
+    if (!user?.primaryEmailAddress?.emailAddress) return;
+
     const result = await db
       .select({
         id: Investments.id,
@@ -94,8 +77,18 @@ function Dashboard() {
         totalvalue: Investments.totalvalue,
       })
       .from(Investments)
-      setinvestmentList(result);
-  };
+      .where(eq(Investments.createdBy, user.primaryEmailAddress.emailAddress));
+    setInvestmentList(result);
+  }, [user?.primaryEmailAddress?.emailAddress]);
+
+  useEffect(() => {
+    if (user) {
+      getBudgetList();
+      getIncomeList();
+      getAllExpenses();
+      getAllInvestment();
+    }
+  }, [user, getBudgetList, getIncomeList, getAllExpenses, getAllInvestment]);
 
   return (
     <div className="p-8 bg-">

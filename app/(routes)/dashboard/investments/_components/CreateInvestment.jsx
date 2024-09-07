@@ -25,8 +25,6 @@ function CreateInvestment({ refreshData }) {
   const [category, setCategory] = useState("");
 
   const { user } = useUser();
-  console.log(user);
-
   const onCreateInvestment = async () => {
     const totalvalue = stockprice * units; 
     const result = await db
